@@ -1,5 +1,12 @@
 [English](README.md) | [简体中文](README-zh.md) | [繁體中文](README-zh-Hant.md) | [Русский](README-ru.md)
 
+> [!IMPORTANT]
+> This is a community-maintained fork of [hwdsl2/docker-kokoro](https://github.com/hwdsl2/docker-kokoro) containing fixes and improvements not yet available in the upstream project:
+> - Added CORS support to the API server.
+> - Included the missing UniDic dictionary required for Japanese voice synthesis.
+>
+> ---
+
 # Kokoro Text-to-Speech on Docker
 
 [![Build Status](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml) &nbsp;[![Docker Pulls](https://raw.githubusercontent.com/hwdsl2/badges/main/img/docker-pulls-kokoro-server.svg)](https://hub.docker.com/r/hwdsl2/kokoro-server) &nbsp;[![License: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT) &nbsp;[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://vpnsetup.net/kokoro-notebook)
