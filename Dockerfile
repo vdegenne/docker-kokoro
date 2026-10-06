@@ -34,6 +34,7 @@ RUN set -x \
          soundfile \
          fastapi \
          "uvicorn[standard]" \
+    && python -m unidic download \
     && if [ "$ARCH" != "x86_64" ]; then \
          pip list --format=freeze | grep -iE '^nvidia[_-]|^cuda[_-]|^triton' | cut -d= -f1 | xargs -r pip uninstall -y; \
        fi \

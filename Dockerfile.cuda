@@ -30,6 +30,7 @@ RUN set -x \
          soundfile \
          fastapi \
          "uvicorn[standard]" \
+    && python -m unidic download \
     && apt-get purge -y build-essential cmake \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
