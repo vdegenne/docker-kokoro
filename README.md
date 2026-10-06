@@ -4,30 +4,28 @@
 
 [![Build Status](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml) &nbsp;[![Docker Pulls](https://raw.githubusercontent.com/hwdsl2/badges/main/img/docker-pulls-kokoro-server.svg)](https://hub.docker.com/r/hwdsl2/kokoro-server) &nbsp;[![License: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT) &nbsp;[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://vpnsetup.net/kokoro-notebook)
 
-Part of the [Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stack) — deploy a complete self-hosted AI stack with a single command.
-
 Docker image to run a [Kokoro](https://github.com/hexgrad/kokoro) text-to-speech server. Provides an OpenAI-compatible audio speech API. Based on Debian (python:3.12-slim). Designed to be simple, private, and self-hosted.
 
 **Features:**
 
-- OpenAI-compatible `POST /v1/audio/speech` endpoint — any app using the OpenAI TTS API switches with a one-line change
-- 54 high-quality voices across 9 languages (English, Japanese, Chinese, Spanish, French, Italian, and more)
-- Accepts OpenAI voice-name aliases (`alloy`, `nova`, `echo`, ...) that map to local Kokoro voices, plus native Kokoro voice IDs (`af_heart`, `bm_george`, ...)
-- Audio stays on your server — no data sent to third parties
-- All major output formats supported: `mp3`, `wav`, `flac`, `opus`, `aac`, `pcm`
-- Streaming support — set `stream_format` to `"audio"` or `"sse"` to receive audio as each sentence is synthesized, reducing time-to-first-audio
-- NVIDIA GPU (CUDA) acceleration for faster inference (`:cuda` image tag)
-- Offline/air-gapped mode — run without internet access using pre-cached model (`KOKORO_LOCAL_ONLY`)
-- Automatically built and published via [GitHub Actions](https://github.com/hwdsl2/docker-kokoro/actions)
-- Persistent model cache via a Docker volume
-- Multi-arch: `linux/amd64`, `linux/arm64`
+- **OpenAI-compatible API:** `POST /v1/audio/speech` for text-to-speech requests from compatible OpenAI SDKs and apps.
+- **Private, local processing:** audio stays on your server and is not sent to third parties.
+- **Voices and languages:** 54 high-quality voices across 9 languages (English, Japanese, Chinese, Spanish, French, Italian, and more).
+- **Voice-name aliases:** accepts OpenAI voice-name aliases (`alloy`, `nova`, `echo`, ...) that map to local Kokoro voices, plus native voice IDs (`af_heart`, `bm_george`, ...).
+- **Streaming audio:** set `stream_format` to `"audio"` or `"sse"` to receive audio as each sentence is synthesized, reducing time-to-first-audio.
+- **Flexible output:** `mp3`, `wav`, `flac`, `opus`, `aac`, `pcm`.
+- **CPU and GPU support:** run on CPU or use the `:cuda` image for NVIDIA GPU acceleration.
+- **Offline operation:** run without internet access using pre-cached model (`KOKORO_LOCAL_ONLY`).
+- **Automated builds:** images are automatically built and published through [GitHub Actions](https://github.com/hwdsl2/docker-kokoro/actions).
+
+Also available as part of the [Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stack), which deploys a complete self-hosted AI stack with a single command.
 
 > 📘 [The Self-Hosted AI Builder’s Guide](https://books2read.com/aiguide?store=amazon) is a practical guide to building, securing, and operating your own private AI stack.
 
 **Also available:**
 
 - Try it online: [Open in Colab](https://vpnsetup.net/kokoro-notebook) — no Docker or installation required
-- Related AI services: [Whisper](https://github.com/hwdsl2/docker-whisper), [Embeddings](https://github.com/hwdsl2/docker-embeddings), [LiteLLM](https://github.com/hwdsl2/docker-litellm), [Ollama](https://github.com/hwdsl2/docker-ollama), [Docling](https://github.com/hwdsl2/docker-docling), [MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway)
+- Related AI services: [ScribeCrate](https://github.com/hwdsl2/scribecrate), [Embeddings](https://github.com/hwdsl2/docker-embeddings), [LiteLLM](https://github.com/hwdsl2/docker-litellm), [Ollama](https://github.com/hwdsl2/docker-ollama), [Docling](https://github.com/hwdsl2/docker-docling), [MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway)
 
 ## Quick start
 
@@ -74,8 +72,15 @@ docker logs kokoro
 
 Once you see "Kokoro text-to-speech server is ready", synthesize your first audio file:
 
+Fresh persistent installations require an API key. Retrieve it for the following examples:
+
+```bash
+kokoro_api_key="$(docker exec kokoro kokoro_manage --getkey)"
+```
+
 ```bash
 curl http://your_server_ip:8880/v1/audio/speech \
+    -H "Authorization: Bearer $kokoro_api_key" \
     -H "Content-Type: application/json" \
     -d '{"model":"tts-1","input":"Hello, world!","voice":"af_heart"}' \
     --output speech.mp3
@@ -260,13 +265,20 @@ volumes:
 
 ## API reference
 
-The API is compatible with [OpenAI's text-to-speech endpoint](https://developers.openai.com/api/reference/resources/audio/subresources/speech/methods/create). Any application already calling `https://api.openai.com/v1/audio/speech` can switch to self-hosted by setting:
+The API is compatible with [OpenAI's text-to-speech endpoint](https://developers.openai.com/api/reference/resources/audio/subresources/speech/methods/create). For clients using the OpenAI SDK, configure the base URL and your server's API key:
 
 OpenAI voice names are accepted as local aliases for client compatibility. These aliases map to Kokoro voices and do not reproduce OpenAI's proprietary voices. The `voice` field may be a string or an object with an `id` field; unknown voices return `400`.
 
+Fresh persistent installations require an API key. Retrieve it for the following examples:
+
+```bash
+kokoro_api_key="$(docker exec kokoro kokoro_manage --getkey)"
+
+export OPENAI_BASE_URL="http://your_server_ip:8880/v1"
+export OPENAI_API_KEY="$kokoro_api_key"
 ```
-OPENAI_BASE_URL=http://your_server_ip:8880
-```
+
+If API key authentication is disabled, omit the `Authorization` header in curl examples. OpenAI SDK clients still require a nonempty key; set `OPENAI_API_KEY=unused`.
 
 ### Synthesize speech
 
@@ -292,6 +304,7 @@ Content-Type: application/json
 
 ```bash
 curl http://your_server_ip:8880/v1/audio/speech \
+    -H "Authorization: Bearer $kokoro_api_key" \
     -H "Content-Type: application/json" \
     -d '{"model":"tts-1","input":"The quick brown fox jumps over the lazy dog.","voice":"af_heart"}' \
     --output speech.mp3
@@ -301,6 +314,7 @@ With a different voice and format:
 
 ```bash
 curl http://your_server_ip:8880/v1/audio/speech \
+    -H "Authorization: Bearer $kokoro_api_key" \
     -H "Content-Type: application/json" \
     -d '{"model":"tts-1","input":"Hello from London.","voice":"bm_george","response_format":"wav","speed":0.9}' \
     --output speech.wav
@@ -310,7 +324,7 @@ With API key authentication:
 
 ```bash
 curl http://your_server_ip:8880/v1/audio/speech \
-    -H "Authorization: Bearer your_api_key" \
+    -H "Authorization: Bearer $kokoro_api_key" \
     -H "Content-Type: application/json" \
     -d '{"model":"tts-1","input":"Hello world","voice":"nova"}' \
     --output speech.mp3
@@ -327,7 +341,8 @@ GET /v1/voices
 Returns all available Kokoro voice IDs and their OpenAI alias mappings.
 
 ```bash
-curl http://your_server_ip:8880/v1/voices
+curl http://your_server_ip:8880/v1/voices \
+    -H "Authorization: Bearer $kokoro_api_key"
 ```
 
 ### List models
@@ -339,7 +354,8 @@ GET /v1/models
 Returns the active models in OpenAI-compatible format.
 
 ```bash
-curl http://your_server_ip:8880/v1/models
+curl http://your_server_ip:8880/v1/models \
+    -H "Authorization: Bearer $kokoro_api_key"
 ```
 
 ### Interactive API docs

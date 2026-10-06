@@ -4,30 +4,28 @@
 
 [![构建状态](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml) &nbsp;[![Docker Pulls](https://raw.githubusercontent.com/hwdsl2/badges/main/img/docker-pulls-kokoro-server.svg)](https://hub.docker.com/r/hwdsl2/kokoro-server) &nbsp;[![开源协议: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT) &nbsp;[![在 Colab 中打开](https://colab.research.google.com/assets/colab-badge.svg)](https://vpnsetup.net/kokoro-notebook)
 
-[Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stack/blob/main/README-zh.md) 的一部分 ─ 一条命令部署完整的自托管 AI 技术栈。
-
 一个用于运行 [Kokoro](https://github.com/hexgrad/kokoro) 文字转语音服务器的 Docker 镜像。提供与 OpenAI 兼容的音频语音 API。基于 Debian（python:3.12-slim）。专为简单、私密、自托管而设计。
 
 **功能特性：**
 
-- 兼容 OpenAI 的 `POST /v1/audio/speech` 接口 —— 已使用 OpenAI TTS API 的应用只需修改一行即可切换
-- 54 种高质量语音，覆盖 9 种语言（英语、日语、中文、西班牙语、法语、意大利语等）
-- 支持映射到本地 Kokoro 语音的 OpenAI 语音名称别名（`alloy`、`nova`、`echo` 等），以及原生 Kokoro 语音 ID（`af_heart`、`bm_george` 等）
-- 音频保留在您的服务器上 —— 不向第三方发送数据
-- 支持所有主流输出格式：`mp3`、`wav`、`flac`、`opus`、`aac`、`pcm`
-- 流式传输支持 —— 设置 `stream_format` 为 `"audio"` 或 `"sse"` 可在每句话合成完成后立即接收音频，减少首次出声的等待时间
-- NVIDIA GPU（CUDA）加速推理（`:cuda` 镜像标签）
-- 离线/气隙模式 —— 使用预缓存模型无需访问互联网（`KOKORO_LOCAL_ONLY`）
-- 通过 [GitHub Actions](https://github.com/hwdsl2/docker-kokoro/actions) 自动构建和发布
-- 通过 Docker 数据卷持久化模型缓存
-- 多架构：`linux/amd64`、`linux/arm64`
+- **兼容 OpenAI 的 API：** 通过 `POST /v1/audio/speech` 接收兼容的 OpenAI SDK 和应用发出的文本转语音请求。
+- **私密的本地处理：** 音频保留在您的服务器上 —— 不向第三方发送数据
+- **语音和语言：** 54 种高质量语音，覆盖 9 种语言（英语、日语、中文、西班牙语、法语、意大利语等）
+- **语音名称别名：** 支持映射到本地 Kokoro 语音的 OpenAI 语音名称别名（`alloy`、`nova`、`echo` 等），以及原生 Kokoro 语音 ID（`af_heart`、`bm_george` 等）
+- **流式音频：** 设置 `stream_format` 为 `"audio"` 或 `"sse"` 可在每句话合成完成后立即接收音频，减少首次出声的等待时间
+- **灵活的输出格式：** `mp3`、`wav`、`flac`、`opus`、`aac`、`pcm`
+- **CPU 和 GPU 支持：** 可在 CPU 上运行，或使用 `:cuda` 镜像启用 NVIDIA GPU 加速。
+- **离线运行：** 使用预缓存模型无需访问互联网（`KOKORO_LOCAL_ONLY`）
+- **自动构建：** 通过 [GitHub Actions](https://github.com/hwdsl2/docker-kokoro/actions) 自动构建和发布
+
+也可作为 [Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stack/blob/main/README-zh.md) 的一部分使用，一条命令即可部署完整的自托管 AI 技术栈。
 
 > 📘 [The Self-Hosted AI Builder’s Guide](https://books2read.com/aiguide?store=amazon) 是一本关于构建、保护和运维自己的私有 AI 技术栈的实用指南。
 
 **另提供：**
 
 - 在线试用：[在 Colab 中打开](https://vpnsetup.net/kokoro-notebook)——无需 Docker 或安装
-- 相关 AI 服务：[Whisper](https://github.com/hwdsl2/docker-whisper/blob/main/README-zh.md)、[Embeddings](https://github.com/hwdsl2/docker-embeddings/blob/main/README-zh.md)、[LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-zh.md)、[Ollama](https://github.com/hwdsl2/docker-ollama/blob/main/README-zh.md)、[Docling](https://github.com/hwdsl2/docker-docling/blob/main/README-zh.md)、[MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway/blob/main/README-zh.md)
+- 相关 AI 服务：[ScribeCrate](https://github.com/hwdsl2/scribecrate/blob/main/README-zh.md)、[Embeddings](https://github.com/hwdsl2/docker-embeddings/blob/main/README-zh.md)、[LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-zh.md)、[Ollama](https://github.com/hwdsl2/docker-ollama/blob/main/README-zh.md)、[Docling](https://github.com/hwdsl2/docker-docling/blob/main/README-zh.md)、[MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway/blob/main/README-zh.md)
 
 ## 快速开始
 
@@ -74,8 +72,15 @@ docker logs kokoro
 
 看到 "Kokoro text-to-speech server is ready" 后，即可合成您的第一个音频文件：
 
+新的持久化安装需要 API 密钥。获取密钥以用于以下示例：
+
+```bash
+kokoro_api_key="$(docker exec kokoro kokoro_manage --getkey)"
+```
+
 ```bash
 curl http://您的服务器IP:8880/v1/audio/speech \
+    -H "Authorization: Bearer $kokoro_api_key" \
     -H "Content-Type: application/json" \
     -d '{"model":"tts-1","input":"你好，世界！","voice":"af_heart"}' \
     --output speech.mp3
@@ -260,13 +265,20 @@ volumes:
 
 ## API 参考
 
-该 API 与 [OpenAI 文字转语音接口](https://developers.openai.com/api/reference/resources/audio/subresources/speech/methods/create)兼容。任何已调用 `https://api.openai.com/v1/audio/speech` 的应用，只需设置以下环境变量即可切换到自托管：
+该 API 与 [OpenAI 文字转语音接口](https://developers.openai.com/api/reference/resources/audio/subresources/speech/methods/create)兼容。使用 OpenAI SDK 的客户端需配置 API 基础 URL 和自托管服务器的 API 密钥：
 
 为便于客户端兼容，OpenAI 语音名称会作为本地别名接受。这些别名会映射到 Kokoro 语音，并不会复现 OpenAI 的专有语音。`voice` 字段可以是字符串，也可以是带有 `id` 字段的对象；未知语音会返回 `400`。
 
+新的持久化安装需要 API 密钥。获取密钥以用于以下示例：
+
+```bash
+kokoro_api_key="$(docker exec kokoro kokoro_manage --getkey)"
+
+export OPENAI_BASE_URL="http://您的服务器IP:8880/v1"
+export OPENAI_API_KEY="$kokoro_api_key"
 ```
-OPENAI_BASE_URL=http://您的服务器IP:8880
-```
+
+如果已禁用 API 密钥认证，请省略 curl 示例中的 `Authorization` 请求头。OpenAI SDK 客户端仍要求提供非空密钥；此时请设置 `OPENAI_API_KEY=unused`。
 
 ### 合成语音
 
@@ -292,6 +304,7 @@ Content-Type: application/json
 
 ```bash
 curl http://您的服务器IP:8880/v1/audio/speech \
+    -H "Authorization: Bearer $kokoro_api_key" \
     -H "Content-Type: application/json" \
     -d '{"model":"tts-1","input":"敏捷的棕色狐狸跳过了懒惰的狗。","voice":"af_heart"}' \
     --output speech.mp3
@@ -301,6 +314,7 @@ curl http://您的服务器IP:8880/v1/audio/speech \
 
 ```bash
 curl http://您的服务器IP:8880/v1/audio/speech \
+    -H "Authorization: Bearer $kokoro_api_key" \
     -H "Content-Type: application/json" \
     -d '{"model":"tts-1","input":"Hello from London.","voice":"bm_george","response_format":"wav","speed":0.9}' \
     --output speech.wav
@@ -310,7 +324,7 @@ curl http://您的服务器IP:8880/v1/audio/speech \
 
 ```bash
 curl http://您的服务器IP:8880/v1/audio/speech \
-    -H "Authorization: Bearer your_api_key" \
+    -H "Authorization: Bearer $kokoro_api_key" \
     -H "Content-Type: application/json" \
     -d '{"model":"tts-1","input":"Hello world","voice":"nova"}' \
     --output speech.mp3
@@ -327,7 +341,8 @@ GET /v1/voices
 返回所有可用的 Kokoro 语音 ID 及其 OpenAI 别名映射。
 
 ```bash
-curl http://您的服务器IP:8880/v1/voices
+curl http://您的服务器IP:8880/v1/voices \
+    -H "Authorization: Bearer $kokoro_api_key"
 ```
 
 ### 列出模型
@@ -339,7 +354,8 @@ GET /v1/models
 以 OpenAI 兼容格式返回当前活跃模型。
 
 ```bash
-curl http://您的服务器IP:8880/v1/models
+curl http://您的服务器IP:8880/v1/models \
+    -H "Authorization: Bearer $kokoro_api_key"
 ```
 
 ### 交互式 API 文档

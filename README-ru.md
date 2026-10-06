@@ -4,30 +4,28 @@
 
 [![Статус сборки](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml/badge.svg)](https://github.com/hwdsl2/docker-kokoro/actions/workflows/main.yml) &nbsp;[![Docker Pulls](https://raw.githubusercontent.com/hwdsl2/badges/main/img/docker-pulls-kokoro-server.svg)](https://hub.docker.com/r/hwdsl2/kokoro-server) &nbsp;[![Лицензия: MIT](docs/images/license.svg)](https://opensource.org/licenses/MIT) &nbsp;[![Открыть в Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://vpnsetup.net/kokoro-notebook)
 
-Часть [Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stack/blob/main/README-ru.md) — разверните полный самостоятельно размещённый AI-стек одной командой.
-
 Docker-образ для запуска сервера синтеза речи [Kokoro](https://github.com/hexgrad/kokoro). Предоставляет API синтеза речи, совместимый с OpenAI. Основан на Debian (python:3.12-slim). Разработан для простого, приватного, самостоятельно размещаемого развёртывания.
 
 **Возможности:**
 
-- Совместимый с OpenAI эндпоинт `POST /v1/audio/speech` — любое приложение, использующее OpenAI TTS API, переключается с изменением одной строки
-- 54 высококачественных голоса на 9 языках (английский, японский, китайский, испанский, французский, итальянский и другие)
-- Поддерживает псевдонимы имён голосов OpenAI (`alloy`, `nova`, `echo`, ...), которые сопоставляются с локальными голосами Kokoro, а также нативные идентификаторы Kokoro (`af_heart`, `bm_george`, ...)
-- Аудио остаётся на вашем сервере — данные не передаются третьим лицам
-- Все основные форматы вывода: `mp3`, `wav`, `flac`, `opus`, `aac`, `pcm`
-- Поддержка стриминга — установите `stream_format` в `"audio"` или `"sse"`, чтобы получать аудио по мере синтеза каждого предложения, сокращая время до первого звука
-- Аппаратное ускорение на GPU NVIDIA (CUDA) для более быстрого вывода (тег образа `:cuda`)
-- Офлайн/изолированный режим — работа без интернета с предварительно кешированной моделью (`KOKORO_LOCAL_ONLY`)
-- Автоматическая сборка и публикация через [GitHub Actions](https://github.com/hwdsl2/docker-kokoro/actions)
-- Постоянный кеш модели через том Docker
-- Мультиархитектурный: `linux/amd64`, `linux/arm64`
+- **Совместимый с OpenAI API:** `POST /v1/audio/speech` для запросов синтеза речи из совместимых OpenAI SDK и приложений.
+- **Конфиденциальная локальная обработка:** Аудио остаётся на вашем сервере — данные не передаются третьим лицам
+- **Голоса и языки:** 54 высококачественных голоса на 9 языках (английский, японский, китайский, испанский, французский, итальянский и другие)
+- **Псевдонимы голосов:** Поддерживает псевдонимы имён голосов OpenAI (`alloy`, `nova`, `echo`, ...), которые сопоставляются с локальными голосами Kokoro, а также нативные идентификаторы Kokoro (`af_heart`, `bm_george`, ...)
+- **Потоковое аудио:** установите `stream_format` в `"audio"` или `"sse"`, чтобы получать аудио по мере синтеза каждого предложения, сокращая время до первого звука
+- **Гибкие форматы вывода:** `mp3`, `wav`, `flac`, `opus`, `aac`, `pcm`
+- **Поддержка CPU и GPU:** работа на CPU или ускорение на GPU NVIDIA с образом `:cuda`.
+- **Работа без интернета:** работа без интернета с предварительно кешированной моделью (`KOKORO_LOCAL_ONLY`)
+- **Автоматическая сборка:** образы автоматически собираются и публикуются через [GitHub Actions](https://github.com/hwdsl2/docker-kokoro/actions).
+
+Также доступен в составе [Self-Hosted AI Stack](https://github.com/hwdsl2/self-hosted-ai-stack/blob/main/README-ru.md), который развёртывает полный AI-стек на собственном сервере одной командой.
 
 > 📘 [The Self-Hosted AI Builder’s Guide](https://books2read.com/aiguide?store=amazon): практическое руководство по созданию, защите и эксплуатации собственного приватного ИИ-стека.
 
 **Также доступно:**
 
 - Попробовать онлайн: [Открыть в Colab](https://vpnsetup.net/kokoro-notebook) — Docker и установка не требуются
-- Связанные AI-сервисы: [Whisper](https://github.com/hwdsl2/docker-whisper/blob/main/README-ru.md), [Embeddings](https://github.com/hwdsl2/docker-embeddings/blob/main/README-ru.md), [LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-ru.md), [Ollama](https://github.com/hwdsl2/docker-ollama/blob/main/README-ru.md), [Docling](https://github.com/hwdsl2/docker-docling/blob/main/README-ru.md), [MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway/blob/main/README-ru.md)
+- Связанные AI-сервисы: [ScribeCrate](https://github.com/hwdsl2/scribecrate/blob/main/README-ru.md), [Embeddings](https://github.com/hwdsl2/docker-embeddings/blob/main/README-ru.md), [LiteLLM](https://github.com/hwdsl2/docker-litellm/blob/main/README-ru.md), [Ollama](https://github.com/hwdsl2/docker-ollama/blob/main/README-ru.md), [Docling](https://github.com/hwdsl2/docker-docling/blob/main/README-ru.md), [MCP Gateway](https://github.com/hwdsl2/docker-mcp-gateway/blob/main/README-ru.md)
 
 ## Быстрый старт
 
@@ -74,8 +72,15 @@ docker logs kokoro
 
 После появления сообщения «Kokoro text-to-speech server is ready» синтезируйте первый аудиофайл:
 
+Новые установки с постоянным томом требуют API-ключ. Получите его для следующих примеров:
+
+```bash
+kokoro_api_key="$(docker exec kokoro kokoro_manage --getkey)"
+```
+
 ```bash
 curl http://IP_вашего_сервера:8880/v1/audio/speech \
+    -H "Authorization: Bearer $kokoro_api_key" \
     -H "Content-Type: application/json" \
     -d '{"model":"tts-1","input":"Привет, мир!","voice":"af_heart"}' \
     --output speech.mp3
@@ -260,13 +265,20 @@ volumes:
 
 ## Справочник API
 
-API совместим с [эндпоинтом синтеза речи OpenAI](https://developers.openai.com/api/reference/resources/audio/subresources/speech/methods/create). Любое приложение, уже вызывающее `https://api.openai.com/v1/audio/speech`, может переключиться на самостоятельно размещённый сервер, установив:
+API совместим с [эндпоинтом синтеза речи OpenAI](https://developers.openai.com/api/reference/resources/audio/subresources/speech/methods/create). Для клиентов, использующих OpenAI SDK, задайте базовый URL API и API-ключ вашего сервера:
 
 Имена голосов OpenAI принимаются как локальные псевдонимы для совместимости клиентов. Эти псевдонимы сопоставляются с голосами Kokoro и не воспроизводят проприетарные голоса OpenAI. Поле `voice` может быть строкой или объектом с полем `id`; неизвестные голоса возвращают `400`.
 
+Новые установки с постоянным томом требуют API-ключ. Получите его для следующих примеров:
+
+```bash
+kokoro_api_key="$(docker exec kokoro kokoro_manage --getkey)"
+
+export OPENAI_BASE_URL="http://IP_вашего_сервера:8880/v1"
+export OPENAI_API_KEY="$kokoro_api_key"
 ```
-OPENAI_BASE_URL=http://IP_вашего_сервера:8880
-```
+
+Если аутентификация по API-ключу отключена, опустите заголовок `Authorization` в примерах curl. Клиентам OpenAI SDK по-прежнему нужен непустой ключ; в этом случае задайте `OPENAI_API_KEY=unused`.
 
 ### Синтез речи
 
@@ -292,6 +304,7 @@ Content-Type: application/json
 
 ```bash
 curl http://IP_вашего_сервера:8880/v1/audio/speech \
+    -H "Authorization: Bearer $kokoro_api_key" \
     -H "Content-Type: application/json" \
     -d '{"model":"tts-1","input":"Быстрая коричневая лиса прыгает через ленивую собаку.","voice":"af_heart"}' \
     --output speech.mp3
@@ -301,6 +314,7 @@ curl http://IP_вашего_сервера:8880/v1/audio/speech \
 
 ```bash
 curl http://IP_вашего_сервера:8880/v1/audio/speech \
+    -H "Authorization: Bearer $kokoro_api_key" \
     -H "Content-Type: application/json" \
     -d '{"model":"tts-1","input":"Hello from London.","voice":"bm_george","response_format":"wav","speed":0.9}' \
     --output speech.wav
@@ -310,7 +324,7 @@ curl http://IP_вашего_сервера:8880/v1/audio/speech \
 
 ```bash
 curl http://IP_вашего_сервера:8880/v1/audio/speech \
-    -H "Authorization: Bearer your_api_key" \
+    -H "Authorization: Bearer $kokoro_api_key" \
     -H "Content-Type: application/json" \
     -d '{"model":"tts-1","input":"Hello world","voice":"nova"}' \
     --output speech.mp3
@@ -327,7 +341,8 @@ GET /v1/voices
 Возвращает все доступные идентификаторы голосов Kokoro и их сопоставление с псевдонимами OpenAI.
 
 ```bash
-curl http://IP_вашего_сервера:8880/v1/voices
+curl http://IP_вашего_сервера:8880/v1/voices \
+    -H "Authorization: Bearer $kokoro_api_key"
 ```
 
 ### Список моделей
@@ -339,7 +354,8 @@ GET /v1/models
 Возвращает активные модели в совместимом с OpenAI формате.
 
 ```bash
-curl http://IP_вашего_сервера:8880/v1/models
+curl http://IP_вашего_сервера:8880/v1/models \
+    -H "Authorization: Bearer $kokoro_api_key"
 ```
 
 ### Интерактивная документация API
